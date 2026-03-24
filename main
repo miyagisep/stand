@@ -61,6 +61,12 @@ local Character = Player.Character or Player.CharacterAdded:Wait()
 local currentGunIndex = 1
 
 local gunData = {
+    mask = {
+        toolName = "[Mask]",
+        shopName = "Skull Mask",
+        ammoShopName = "",
+        inventoryKey = "[Mask]"
+    },
     rifle = {toolName = "[Rifle]", shopName = "[Rifle] - $1745", ammoShopName = "5 [Rifle Ammo] - $281", inventoryKey = "[Rifle]"},
     shotgun = {toolName = "[Shotgun]", shopName = "[Shotgun] - $1407", ammoShopName = "20 [Shotgun Ammo] - $68", inventoryKey = "[Shotgun]"},
     smg = {toolName = "[SMG]", shopName = "[SMG] - $844", ammoShopName = "80 [SMG Ammo] - $68", inventoryKey = "[SMG]"},
@@ -228,7 +234,6 @@ local summonTarget = nil
 local summonMode = "middle"
 local voiding = true
 
--- ===== SISTEMA DE MASK CORRIGIDO =====
 function buyAndEquipMask()
     local player = game.Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
@@ -245,12 +250,11 @@ function buyAndEquipMask()
     end
     
     if skullMask then
+        local originalPosition = humanoidRootPart.CFrame
         local targetPart = skullMask:FindFirstChild("Head") or skullMask:FindFirstChildOfClass("BasePart")
         if targetPart then
-            -- Teleportar EMBAIXO DO CHÃO como nas armas (muito mais fácil clicar)
-            humanoidRootPart.CFrame = CFrame.new(targetPart.Position + Vector3.new(0, -8, 0))
-            task.wait(0.4)
-            
+            humanoidRootPart.CFrame = targetPart.CFrame * CFrame.new(0, 3, 0)
+            task.wait(0.1)
             local clickDetector = skullMask:FindFirstChildOfClass("ClickDetector")
             if not clickDetector then
                 for _, v in pairs(skullMask:GetDescendants()) do
@@ -260,68 +264,20 @@ function buyAndEquipMask()
                     end
                 end
             end
-            
             if clickDetector then
                 fireclickdetector(clickDetector)
                 task.wait(0.5)
-                
-                -- Tentar pegar a mask do backpack
                 local mask = player.Backpack:FindFirstChild("[Mask]") or player.Backpack:FindFirstChild("Mask")
                 if mask then 
-                    -- Equipar na mão
                     mask.Parent = character
-                    task.wait(0.3)
-                    
-                    -- Ativar (usar a mask)
-                    pcall(function() mask:Activate() end)
                     task.wait(0.2)
-                    
-                    -- IMPORTANTE: Soltar da mão para não atrapalhar compra de armas
-                    pcall(function() mask.Parent = player.Backpack end)
-                    task.wait(0.2)
+                    mask:Activate()
                 end
             end
         end
+        humanoidRootPart.CFrame = originalPosition
     end
 end
-
--- TASK DE COMPRA DE MASK - AGORA COMPRA PRIMEIRO, DEPOIS ARMAS
-task.spawn(function()
-    while true do
-        if automaskenabled then
-            local char = Player.Character
-            if char then
-                local hum_ = char:FindFirstChildOfClass("Humanoid")
-                local be_  = char:FindFirstChild("BodyEffects")
-                local isKO_= be_ and be_:FindFirstChild("K.O") and be_["K.O"].Value
-                
-                if not isKO_ and hum_ and hum_.Health > 0 then
-                    -- PRIMEIRA PRIORIDADE: Comprar e equipar mask
-                    if not (Player.Backpack:FindFirstChild("Mask") or Player.Backpack:FindFirstChild("[Mask]") or char:FindFirstChild("Mask") or char:FindFirstChild("[Mask]") or char:FindFirstChild("In-gameMask")) then
-                        buyingMaskInProgress = true
-                        buyAndEquipMask()
-                        buyingMaskInProgress = false
-                        task.wait(2)
-                    else
-                        -- Se já tem mask, equipar e depois soltar
-                        local mask = Player.Backpack:FindFirstChild("[Mask]") or Player.Backpack:FindFirstChild("Mask")
-                        if mask then
-                            mask.Parent = char
-                            task.wait(0.3)
-                            pcall(function() mask:Activate() end)
-                            task.wait(0.2)
-                            pcall(function() mask.Parent = Player.Backpack end)
-                        end
-                        
-                        -- Agora sim, pode comprar armas
-                        automaskenabled = false
-                    end
-                end
-            end
-        end
-        task.wait(0.5)
-    end
-end)
 
 function autoEquipMask()
     local player = game.Players.LocalPlayer
@@ -1515,6 +1471,21 @@ end
 function hasGun(toolName)
     local Character_ = Player.Character
     local Backpack    = Player:FindFirstChild("Backpack")
+
+    if toolName == "[Mask]" then
+        if Backpack then
+            for _, item in ipairs(Backpack:GetChildren()) do
+                if item:IsA("Tool") and (item.Name == "[Mask]" or item.Name == "Mask") then return true end
+            end
+        end
+        if Character_ then
+            for _, item in ipairs(Character_:GetChildren()) do
+                if item:IsA("Tool") and (item.Name == "[Mask]" or item.Name == "Mask") then return true end
+            end
+        end
+        return false
+    end
+
     if Backpack then
         for _, item in ipairs(Backpack:GetChildren()) do
             if item:IsA("Tool") and item.Name == toolName then return true end
@@ -1596,6 +1567,47 @@ task.spawn(function()
         for _, gunKey in ipairs(Guns) do
             local gunInfo = gunData[gunKey]
             if not gunInfo then continue end
+
+            -- ESPECIAL PARA MASK
+            if gunKey == "mask" then
+                if not hasGun("[Mask]") then
+                    local shopItem = ShopFolder:FindFirstChild("Skull Mask")
+                    if not shopItem then continue end
+
+                    local headPart = shopItem:FindFirstChild("Head") or shopItem:FindFirstChildOfClass("BasePart")
+                    if not headPart then continue end
+
+                    local cd = shopItem:FindFirstChild("ClickDetector")
+                    if not cd then
+                        for _, v in pairs(shopItem:GetDescendants()) do
+                            if v:IsA("ClickDetector") then cd = v; break end
+                        end
+                    end
+                    if not cd then continue end
+
+                    buyingMaskInProgress = true
+                    local origCF = rootPart and rootPart.CFrame
+
+                    rootPart.CFrame = CFrame.new(headPart.Position + Vector3.new(0, -8, 0))
+                    task.wait(0.4)
+                    fireclickdetector(cd)
+                    task.wait(0.5)
+
+                    local mask = Player.Backpack:FindFirstChild("[Mask]") or Player.Backpack:FindFirstChild("Mask")
+                    if mask then
+                        mask.Parent = char_
+                        task.wait(0.3)
+                        pcall(function() mask:Activate() end)
+                        task.wait(0.2)
+                        mask.Parent = Player.Backpack
+                    end
+
+                    if rootPart and origCF then rootPart.CFrame = origCF end
+                    buyingMaskInProgress = false
+                    task.wait(2)
+                end
+                continue
+            end
 
             if not hasGun(gunInfo.toolName) then
                 local shopItem = ShopFolder:FindFirstChild(gunInfo.shopName)
