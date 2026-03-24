@@ -270,6 +270,9 @@ function buyAndEquipMask()
         char = player.Character
         root_ = char and char:FindFirstChild("HumanoidRootPart")
         if not root_ then break end
+        local hum_ = char:FindFirstChildOfClass("Humanoid")
+        if hum_ then hum_:UnequipTools() end
+        task.wait(0.1)
         root_.CFrame = CFrame.new(headPart.CFrame.Position + Vector3.new(0, -8, 0))
         task.wait(0.1)
         fireclickdetector(cd)
@@ -1943,4 +1946,3 @@ pcall(function()
 end)
 
 -- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back kids haha
--- yt
