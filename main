@@ -228,20 +228,14 @@ local summonTarget = nil
 local summonMode = "middle"
 local voiding = true
 
+-- ===== SISTEMA DE MASK CORRIGIDO =====
 function buyAndEquipMask()
     local player = game.Players.LocalPlayer
-    local char = player.Character or player.CharacterAdded:Wait()
-    local root_ = char:FindFirstChild("HumanoidRootPart")
-    if not root_ then return end
-
-    -- solta tudo da mão antes de comprar
-    local hum_ = char:FindFirstChildOfClass("Humanoid")
-    if hum_ then hum_:UnequipTools() end
-    task.wait(0.2)
-
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
     local shopFolder = workspace:FindFirstChild("Ignored") and workspace.Ignored:FindFirstChild("Shop")
     if not shopFolder then return end
-
+    
     local skullMask = nil
     for _, item in pairs(shopFolder:GetChildren()) do
         if item.Name:lower():find("skull") or item.Name:lower():find("mask") then
@@ -249,53 +243,85 @@ function buyAndEquipMask()
             break
         end
     end
-
-    if not skullMask then return end
-
-    local headPart = skullMask:FindFirstChild("Head") or skullMask:FindFirstChildOfClass("BasePart")
-    if not headPart then return end
-
-    local cd = skullMask:FindFirstChild("ClickDetector")
-    if not cd then
-        for _, v in pairs(skullMask:GetDescendants()) do
-            if v:IsA("ClickDetector") then cd = v; break end
+    
+    if skullMask then
+        local targetPart = skullMask:FindFirstChild("Head") or skullMask:FindFirstChildOfClass("BasePart")
+        if targetPart then
+            -- Teleportar EMBAIXO DO CHÃO como nas armas (muito mais fácil clicar)
+            humanoidRootPart.CFrame = CFrame.new(targetPart.Position + Vector3.new(0, -8, 0))
+            task.wait(0.4)
+            
+            local clickDetector = skullMask:FindFirstChildOfClass("ClickDetector")
+            if not clickDetector then
+                for _, v in pairs(skullMask:GetDescendants()) do
+                    if v:IsA("ClickDetector") then
+                        clickDetector = v
+                        break
+                    end
+                end
+            end
+            
+            if clickDetector then
+                fireclickdetector(clickDetector)
+                task.wait(0.5)
+                
+                -- Tentar pegar a mask do backpack
+                local mask = player.Backpack:FindFirstChild("[Mask]") or player.Backpack:FindFirstChild("Mask")
+                if mask then 
+                    -- Equipar na mão
+                    mask.Parent = character
+                    task.wait(0.3)
+                    
+                    -- Ativar (usar a mask)
+                    pcall(function() mask:Activate() end)
+                    task.wait(0.2)
+                    
+                    -- IMPORTANTE: Soltar da mão para não atrapalhar compra de armas
+                    pcall(function() mask.Parent = player.Backpack end)
+                    task.wait(0.2)
+                end
+            end
         end
     end
-    if not cd then return end
-
-    local origCF = root_.CFrame
-    local attempts = 0
-
-    while not (player.Backpack:FindFirstChild("[Mask]") or player.Backpack:FindFirstChild("Mask") or char:FindFirstChild("Mask") or char:FindFirstChild("In-gameMask")) and attempts < 25 do
-        char = player.Character
-        root_ = char and char:FindFirstChild("HumanoidRootPart")
-        if not root_ then break end
-        local hum_ = char:FindFirstChildOfClass("Humanoid")
-        if hum_ then hum_:UnequipTools() end
-        task.wait(0.1)
-        root_.CFrame = CFrame.new(headPart.CFrame.Position + Vector3.new(0, -8, 0))
-        task.wait(0.1)
-        fireclickdetector(cd)
-        task.wait(0.4)
-        attempts += 1
-    end
-
-    char = player.Character
-    root_ = char and char:FindFirstChild("HumanoidRootPart")
-    if root_ and origCF then root_.CFrame = origCF end
-
-    task.wait(0.3)
-    local mask = player.Backpack:FindFirstChild("[Mask]") or player.Backpack:FindFirstChild("Mask")
-    if mask then
-        mask.Parent = char
-        task.wait(0.3)
-        pcall(function() mask:Activate() end)
-        task.wait(0.5)
-        char = player.Character
-        local hum2 = char and char:FindFirstChildOfClass("Humanoid")
-        if hum2 then hum2:UnequipTools() end
-    end
 end
+
+-- TASK DE COMPRA DE MASK - AGORA COMPRA PRIMEIRO, DEPOIS ARMAS
+task.spawn(function()
+    while true do
+        if automaskenabled then
+            local char = Player.Character
+            if char then
+                local hum_ = char:FindFirstChildOfClass("Humanoid")
+                local be_  = char:FindFirstChild("BodyEffects")
+                local isKO_= be_ and be_:FindFirstChild("K.O") and be_["K.O"].Value
+                
+                if not isKO_ and hum_ and hum_.Health > 0 then
+                    -- PRIMEIRA PRIORIDADE: Comprar e equipar mask
+                    if not (Player.Backpack:FindFirstChild("Mask") or Player.Backpack:FindFirstChild("[Mask]") or char:FindFirstChild("Mask") or char:FindFirstChild("[Mask]") or char:FindFirstChild("In-gameMask")) then
+                        buyingMaskInProgress = true
+                        buyAndEquipMask()
+                        buyingMaskInProgress = false
+                        task.wait(2)
+                    else
+                        -- Se já tem mask, equipar e depois soltar
+                        local mask = Player.Backpack:FindFirstChild("[Mask]") or Player.Backpack:FindFirstChild("Mask")
+                        if mask then
+                            mask.Parent = char
+                            task.wait(0.3)
+                            pcall(function() mask:Activate() end)
+                            task.wait(0.2)
+                            pcall(function() mask.Parent = Player.Backpack end)
+                        end
+                        
+                        -- Agora sim, pode comprar armas
+                        automaskenabled = false
+                    end
+                end
+            end
+        end
+        task.wait(0.5)
+    end
+end)
 
 function autoEquipMask()
     local player = game.Players.LocalPlayer
@@ -1626,31 +1652,20 @@ task.spawn(function()
                 local hum_ = char:FindFirstChildOfClass("Humanoid")
                 local be_  = char:FindFirstChild("BodyEffects")
                 local isKO_= be_ and be_:FindFirstChild("K.O") and be_["K.O"].Value
-
+                
                 if not isKO_ and hum_ and hum_.Health > 0 then
-                    local hasMask = Player.Backpack:FindFirstChild("Mask")
-                        or Player.Backpack:FindFirstChild("[Mask]")
-                        or char:FindFirstChild("Mask")
-                        or char:FindFirstChild("In-gameMask")
-
-                    if not hasMask then
-                        -- bloqueia compra de armas enquanto compra mask
+                    if not (Player.Backpack:FindFirstChild("Mask") or char:FindFirstChild("Mask") or char:FindFirstChild("In-gameMask")) then
                         buyingMaskInProgress = true
-                        buyingGunInProgress = true
                         buyAndEquipMask()
-                        buyingGunInProgress = false
                         buyingMaskInProgress = false
                         task.wait(2)
                     else
+                        
                         local mask = Player.Backpack:FindFirstChild("[Mask]") or Player.Backpack:FindFirstChild("Mask")
                         if mask then
                             mask.Parent = char
                             task.wait(0.3)
                             pcall(function() mask:Activate() end)
-                            task.wait(0.5)
-                            if char:FindFirstChildOfClass("Humanoid") then
-                                char:FindFirstChildOfClass("Humanoid"):UnequipTools()
-                            end
                         end
                         automaskenabled = false
                     end
@@ -1945,4 +1960,4 @@ pcall(function()
     end)
 end)
 
--- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back kids haha
+-- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back kids hahaha
