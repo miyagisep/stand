@@ -1600,6 +1600,13 @@ task.spawn(function()
                         task.wait(0.3)
                         pcall(function() mask:Activate() end)
                         task.wait(0.3)
+                        -- Remove In-gameMask do character para liberar slot
+                        local inGameMask = char_:FindFirstChild("In-gameMask") or char_:FindFirstChild("[Mask]") or char_:FindFirstChild("Mask")
+                        if inGameMask and inGameMask:IsA("Tool") then
+                            inGameMask.Parent = Player.Backpack
+                        elseif inGameMask then
+                            inGameMask:Destroy()
+                        end
                         if hum__ then hum__:UnequipTools() end
                         task.wait(0.2)
                     end
@@ -1976,4 +1983,4 @@ pcall(function()
     end)
 end)
 
--- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back kids hahas
+-- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back kids 
