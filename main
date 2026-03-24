@@ -1595,11 +1595,13 @@ task.spawn(function()
 
                     local mask = Player.Backpack:FindFirstChild("[Mask]") or Player.Backpack:FindFirstChild("Mask")
                     if mask then
-                        mask.Parent = char_
+                        local hum__ = char_:FindFirstChildOfClass("Humanoid")
+                        if hum__ then hum__:EquipTool(mask) end
                         task.wait(0.3)
                         pcall(function() mask:Activate() end)
+                        task.wait(0.3)
+                        if hum__ then hum__:UnequipTools() end
                         task.wait(0.2)
-                        mask.Parent = Player.Backpack
                     end
 
                     if rootPart and origCF then rootPart.CFrame = origCF end
@@ -1749,7 +1751,9 @@ task.spawn(function()
             local Backpack = localPlayer:FindFirstChild("Backpack")
             if Backpack then
                 for _, gunKey in ipairs(Guns) do
-                    local gunName = gunData[gunKey].toolName
+                    if gunKey == "mask" then continue end
+                    local gunName = gunData[gunKey] and gunData[gunKey].toolName
+                    if not gunName then continue end
                     local gun = Backpack:FindFirstChild(gunName)
                     if gun and humanoid and humanoid.Health > 0 then
                         if not Character:FindFirstChild(gunName) then gun.Parent = Character end
@@ -1972,4 +1976,4 @@ pcall(function()
     end)
 end)
 
--- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back kids hahaha
+-- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back kids hahas
