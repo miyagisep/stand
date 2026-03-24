@@ -234,6 +234,11 @@ function buyAndEquipMask()
     local root_ = char:FindFirstChild("HumanoidRootPart")
     if not root_ then return end
 
+    -- solta tudo da mão antes de comprar
+    local hum_ = char:FindFirstChildOfClass("Humanoid")
+    if hum_ then hum_:UnequipTools() end
+    task.wait(0.2)
+
     local shopFolder = workspace:FindFirstChild("Ignored") and workspace.Ignored:FindFirstChild("Shop")
     if not shopFolder then return end
 
@@ -265,7 +270,6 @@ function buyAndEquipMask()
         char = player.Character
         root_ = char and char:FindFirstChild("HumanoidRootPart")
         if not root_ then break end
-        -- igual às armas: ficar abaixo do chão para clicar
         root_.CFrame = CFrame.new(headPart.CFrame.Position + Vector3.new(0, -8, 0))
         task.wait(0.1)
         fireclickdetector(cd)
@@ -273,12 +277,10 @@ function buyAndEquipMask()
         attempts += 1
     end
 
-    -- volta para posição original
     char = player.Character
     root_ = char and char:FindFirstChild("HumanoidRootPart")
     if root_ and origCF then root_.CFrame = origCF end
 
-    -- equipa a mask e solta da mão
     task.wait(0.3)
     local mask = player.Backpack:FindFirstChild("[Mask]") or player.Backpack:FindFirstChild("Mask")
     if mask then
@@ -286,10 +288,9 @@ function buyAndEquipMask()
         task.wait(0.3)
         pcall(function() mask:Activate() end)
         task.wait(0.5)
-        -- solta a mask da mão antes de ir comprar armas
-        if char and char:FindFirstChildOfClass("Humanoid") then
-            char:FindFirstChildOfClass("Humanoid"):UnequipTools()
-        end
+        char = player.Character
+        local hum2 = char and char:FindFirstChildOfClass("Humanoid")
+        if hum2 then hum2:UnequipTools() end
     end
 end
 
@@ -1942,3 +1943,4 @@ pcall(function()
 end)
 
 -- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back kids haha
+-- yt
