@@ -1522,10 +1522,7 @@ function buyMaskLikeGun()
     if not humanoidRootPart then return false end
     local shopFolder = workspace:FindFirstChild("Ignored") and workspace.Ignored:FindFirstChild("Shop")
     if not shopFolder then return false end
-    local maskShop = nil
-    for _, item in pairs(shopFolder:GetChildren()) do
-        if item.Name:lower():find("mask") or item.Name:lower():find("skull") then maskShop = item; break end
-    end
+    local maskShop = shopFolder:FindFirstChild("Skull Mask")
     if not maskShop then return false end
     local headPart = maskShop:FindFirstChild("Head") or maskShop:FindFirstChildOfClass("BasePart")
     if not headPart then return false end
@@ -2017,4 +2014,4 @@ pcall(function()
     end)
 end)
 
--- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev
+-- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: como capo
