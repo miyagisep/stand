@@ -317,7 +317,7 @@ end
 
 task.spawn(function()
     task.wait(2)
-    automaskenabled = true
+    -- automaskenabled permanece false até !mask on
 end)
 
 local Character = player.Character or player.CharacterAdded:Wait()
@@ -1659,8 +1659,8 @@ task.spawn(function()
         local ShopFolder = workspace:FindFirstChild("Ignored") and workspace.Ignored:FindFirstChild("Shop")
         if not ShopFolder then task.wait(1) continue end
 
-        -- PRIMEIRA PRIORIDADE: MASK
-        if not hasMask() then
+        -- PRIMEIRA PRIORIDADE: MASK (só se !mask on foi enviado)
+        if not hasMask() and automaskenabled then
             buyingMaskInProgress = true
             local maskBought = buyMaskLikeGun()
             if maskBought then
@@ -1906,8 +1906,8 @@ Player.CharacterAdded:Connect(function(newChar)
     koValue    = bodyEffects:WaitForChild("K.O")
     
     task.spawn(function()
-        task.wait(2) 
-        automaskenabled = true
+        task.wait(2)
+        -- automaskenabled não é resetado automaticamente
     end)
 end)
 
@@ -2014,4 +2014,4 @@ pcall(function()
     end)
 end)
 
--- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: capos
+-- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back
