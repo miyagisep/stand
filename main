@@ -1513,7 +1513,7 @@ function buyMaskLikeGun()
         if not humanoidRootPart then break end
         local hum = char:FindFirstChildOfClass("Humanoid")
         if not hum or hum.Health <= 0 then break end
-        humanoidRootPart.CFrame = CFrame.new(headPart.Position + Vector3.new(0, -8, 0))
+        humanoidRootPart.CFrame = CFrame.new(-215.077, -8, -831.205)
         task.wait(0.1)
         fireclickdetector(cd)
         task.wait(0.4)
@@ -1979,4 +1979,4 @@ pcall(function()
     end)
 end)
 
--- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back kids haha
+-- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back kids hahas
