@@ -260,8 +260,8 @@ function buyAndEquipMask()
     local function hasMaskNow()
         local bp = player:FindFirstChild("Backpack")
         local ch = player.Character
-        if bp and (bp:FindFirstChild("[Mask]") or bp:FindFirstChild("Mask")) then return true end
-        if ch and (ch:FindFirstChild("[Mask]") or ch:FindFirstChild("Mask") or ch:FindFirstChild("In-gameMask")) then return true end
+        if bp and bp:FindFirstChild("[Mask]") then return true end
+        if ch and (ch:FindFirstChild("[Mask]") or ch:FindFirstChild("In-gameMask")) then return true end
         return false
     end
 
@@ -1499,10 +1499,10 @@ function hasMask()
     local char = Player.Character
     local backpack = Player:FindFirstChild("Backpack")
     if backpack then
-        if backpack:FindFirstChild("[Mask]") or backpack:FindFirstChild("Mask") then return true end
+        if backpack:FindFirstChild("[Mask]") then return true end
     end
     if char then
-        if char:FindFirstChild("[Mask]") or char:FindFirstChild("Mask") or char:FindFirstChild("In-gameMask") then return true end
+        if char:FindFirstChild("[Mask]") or char:FindFirstChild("In-gameMask") then return true end
     end
     return false
 end
@@ -1559,7 +1559,7 @@ function equipMask()
     if not char then return false end
     local backpack = Player:FindFirstChild("Backpack")
     if not backpack then return false end
-    local mask = backpack:FindFirstChild("[Mask]") or backpack:FindFirstChild("Mask")
+    local mask = backpack:FindFirstChild("[Mask]")
     if not mask then return false end
     local hum = char:FindFirstChildOfClass("Humanoid")
     if hum then hum:EquipTool(mask) end
@@ -2014,4 +2014,4 @@ pcall(function()
     end)
 end)
 
--- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: como capo
+-- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: capos
