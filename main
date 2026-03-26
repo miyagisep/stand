@@ -236,10 +236,12 @@ function buyAndEquipMask()
     local shopFolder = workspace:FindFirstChild("Ignored") and workspace.Ignored:FindFirstChild("Shop")
     if not shopFolder then return end
 
-    local skullMask = nil
-    for _, item in pairs(shopFolder:GetChildren()) do
-        if item.Name:lower():find("skull") or item.Name:lower():find("mask") then
-            skullMask = item; break
+    local skullMask = shopFolder:FindFirstChild("Skull Mask")
+    if not skullMask then
+        for _, item in pairs(shopFolder:GetChildren()) do
+            if item.Name:lower():find("skull") or item.Name:lower():find("mask") then
+                skullMask = item; break
+            end
         end
     end
     if not skullMask then return end
@@ -2015,4 +2017,4 @@ pcall(function()
     end)
 end)
 
--- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back 
+-- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev
