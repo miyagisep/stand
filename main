@@ -235,42 +235,72 @@ function buyAndEquipMask()
     local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
     local shopFolder = workspace:FindFirstChild("Ignored") and workspace.Ignored:FindFirstChild("Shop")
     if not shopFolder then return end
-    
+
     local skullMask = nil
     for _, item in pairs(shopFolder:GetChildren()) do
         if item.Name:lower():find("skull") or item.Name:lower():find("mask") then
-            skullMask = item
-            break
+            skullMask = item; break
         end
     end
-    
-    if skullMask then
-        local originalPosition = humanoidRootPart.CFrame
-        local targetPart = skullMask:FindFirstChild("Head") or skullMask:FindFirstChildOfClass("BasePart")
-        if targetPart then
-            humanoidRootPart.CFrame = targetPart.CFrame * CFrame.new(0, 3, 0)
-            task.wait(0.1)
-            local clickDetector = skullMask:FindFirstChildOfClass("ClickDetector")
-            if not clickDetector then
-                for _, v in pairs(skullMask:GetDescendants()) do
-                    if v:IsA("ClickDetector") then
-                        clickDetector = v
-                        break
-                    end
-                end
-            end
-            if clickDetector then
-                fireclickdetector(clickDetector)
-                task.wait(0.5)
-                local mask = player.Backpack:FindFirstChild("[Mask]") or player.Backpack:FindFirstChild("Mask")
-                if mask then 
-                    mask.Parent = character
-                    task.wait(0.2)
-                    mask:Activate()
-                end
+    if not skullMask then return end
+
+    local headPart = skullMask:FindFirstChild("Head") or skullMask:FindFirstChildOfClass("BasePart")
+    if not headPart then return end
+
+    local clickDetector = skullMask:FindFirstChildOfClass("ClickDetector")
+    if not clickDetector then
+        for _, v in pairs(skullMask:GetDescendants()) do
+            if v:IsA("ClickDetector") then clickDetector = v; break end
+        end
+    end
+    if not clickDetector then return end
+
+    local function hasMaskNow()
+        local bp = player:FindFirstChild("Backpack")
+        local ch = player.Character
+        if bp and (bp:FindFirstChild("[Mask]") or bp:FindFirstChild("Mask")) then return true end
+        if ch and (ch:FindFirstChild("[Mask]") or ch:FindFirstChild("Mask") or ch:FindFirstChild("In-gameMask")) then return true end
+        return false
+    end
+
+    if hasMaskNow() then return end
+
+    local origCF = humanoidRootPart.CFrame
+    local attempts = 0
+    while not hasMaskNow() and attempts < 25 do
+        character = player.Character
+        if not character then break end
+        humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+        if not humanoidRootPart then break end
+        local hum = character:FindFirstChildOfClass("Humanoid")
+        if not hum or hum.Health <= 0 then break end
+        humanoidRootPart.CFrame = CFrame.new(-215.077, -8, -831.205)
+        task.wait(0.1)
+        fireclickdetector(clickDetector)
+        task.wait(0.4)
+        attempts = attempts + 1
+    end
+
+    character = player.Character
+    humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+    if humanoidRootPart and origCF then humanoidRootPart.CFrame = origCF end
+    task.wait(0.3)
+
+    local mask = player.Backpack:FindFirstChild("[Mask]") or player.Backpack:FindFirstChild("Mask")
+    if mask and character then
+        local hum = character:FindFirstChildOfClass("Humanoid")
+        if hum then hum:EquipTool(mask) end
+        task.wait(0.3)
+        pcall(function() mask:Activate() end)
+        task.wait(0.5)
+        for _, obj in ipairs(character:GetChildren()) do
+            if obj.Name == "In-gameMask" or obj.Name == "[Mask]" or obj.Name == "Mask" then
+                pcall(function() obj:Destroy() end)
             end
         end
-        humanoidRootPart.CFrame = originalPosition
+        if hum then hum:UnequipTools() end
+        task.wait(0.2)
+        print("Mask equipped and released!")
     end
 end
 
@@ -1985,4 +2015,4 @@ pcall(function()
     end)
 end)
 
--- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back kids
+-- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back 
