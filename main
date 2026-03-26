@@ -1536,7 +1536,15 @@ function equipMask()
     if hum then hum:EquipTool(mask) end
     task.wait(0.3)
     pcall(function() mask:Activate() end)
-    task.wait(0.3)
+    task.wait(0.5)
+    -- Remover In-gameMask do character após ativar
+    for _, obj in ipairs(char:GetChildren()) do
+        if obj.Name == "In-gameMask" or obj.Name == "[Mask]" or obj.Name == "Mask" then
+            pcall(function() obj:Destroy() end)
+        end
+    end
+    if hum then hum:UnequipTools() end
+    task.wait(0.2)
     return true
 end
 
@@ -1628,9 +1636,7 @@ task.spawn(function()
             local maskBought = buyMaskLikeGun()
             if maskBought then
                 equipMask()
-                task.wait(0.5)
-                unequipMask()
-                task.wait(0.5)
+                task.wait(1)
             end
             buyingMaskInProgress = false
             task.wait(2)
@@ -1979,4 +1985,4 @@ pcall(function()
     end)
 end)
 
--- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back kids hahas
+-- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back kids
