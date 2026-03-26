@@ -4,7 +4,15 @@ local Owner           = getgenv().Owner           or "venenoxp36"
 local BlackScreen     = getgenv().BlackScreen     or false
 local DisableRendering= getgenv().DisableRendering or false
 local FPSCap          = getgenv().FPSCap          or 60
-local Guns            = getgenv().Guns            or {"rifle", "shotgun", "smg"}
+local Guns = getgenv().Guns or {"rifle", "shotgun", "smg"}
+-- Remover mask do Guns caso esteja presente (mask é controlada por !mask on)
+do
+    local filtered = {}
+    for _, g in ipairs(Guns) do
+        if g ~= "mask" then table.insert(filtered, g) end
+    end
+    Guns = filtered
+end
 
 if not game:IsLoaded() then game.Loaded:Wait() end
 
@@ -2014,4 +2022,4 @@ pcall(function()
     end)
 end)
 
--- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back
+-- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Isix
