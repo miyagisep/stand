@@ -64,7 +64,6 @@ local currentGunIndex = 1
 -- GUNDATA COM MASK
 -- ═══════════════════════════════════════════════════════════════════════════
 local gunData = {
-    mask = {toolName = "[Mask]", shopName = "Skull Mask", ammoShopName = "", inventoryKey = "[Mask]"},
     rifle = {toolName = "[Rifle]", shopName = "[Rifle] - $1745", ammoShopName = "5 [Rifle Ammo] - $281", inventoryKey = "[Rifle]"},
     shotgun = {toolName = "[Shotgun]", shopName = "[Shotgun] - $1407", ammoShopName = "20 [Shotgun Ammo] - $68", inventoryKey = "[Shotgun]"},
     smg = {toolName = "[SMG]", shopName = "[SMG] - $844", ammoShopName = "80 [SMG Ammo] - $68", inventoryKey = "[SMG]"},
