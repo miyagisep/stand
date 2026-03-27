@@ -60,9 +60,6 @@ local Player = Players.LocalPlayer
 local Character = Player.Character or Player.CharacterAdded:Wait()
 local currentGunIndex = 1
 
--- ═══════════════════════════════════════════════════════════════════════════
--- GUNDATA COM MASK
--- ═══════════════════════════════════════════════════════════════════════════
 local gunData = {
     mask = {toolName = "[Mask]", shopName = "Skull Mask", ammoShopName = "", inventoryKey = "[Mask]"},
     rifle = {toolName = "[Rifle]", shopName = "[Rifle] - $1745", ammoShopName = "5 [Rifle Ammo] - $281", inventoryKey = "[Rifle]"},
@@ -118,6 +115,11 @@ local trashtalkactive = true
 local fpactive = false
 local refreshingfakeposition = false
 local didRefreshOnDeath = false
+
+-- ══════════════════════════════════════════════════
+-- FLAG DE ESPERA DE FF (igual ao ragebot)
+-- ══════════════════════════════════════════════════
+local waitingFF = false
 
 local player = game.Players.LocalPlayer
 local character = game.Players.LocalPlayer.Character
@@ -232,137 +234,89 @@ local summonTarget = nil
 local summonMode = "middle"
 local voiding = true
 
--- ═══════════════════════════════════════════════════════════════════════════
--- FUNÇÕES DE MASK CORRIGIDAS
--- ═══════════════════════════════════════════════════════════════════════════
-
 function hasMask()
     local char = Player.Character
     local backpack = Player:FindFirstChild("Backpack")
-    
     if backpack then
-        if backpack:FindFirstChild("[Mask]") or backpack:FindFirstChild("Mask") then
-            return true
-        end
+        if backpack:FindFirstChild("[Mask]") or backpack:FindFirstChild("Mask") then return true end
     end
-    
     if char then
-        if char:FindFirstChild("[Mask]") or char:FindFirstChild("Mask") or char:FindFirstChild("In-gameMask") then
-            return true
-        end
+        if char:FindFirstChild("[Mask]") or char:FindFirstChild("Mask") or char:FindFirstChild("In-gameMask") then return true end
     end
-    
     return false
 end
 
 function unequipMask()
     local char = Player.Character
     if not char then return end
-    
     local mask = char:FindFirstChild("[Mask]") or char:FindFirstChild("Mask")
     if mask then
         pcall(function()
-            if mask:IsA("Tool") then
-                char.Humanoid:UnequipTool(mask)
-            end
+            if mask:IsA("Tool") then char.Humanoid:UnequipTool(mask) end
         end)
     end
-    
     task.wait(0.2)
 end
 
 function buyMaskLikeGun()
     local char = Player.Character
     if not char then return false end
-    
     local backpack = Player:FindFirstChild("Backpack")
     if not backpack then return false end
-    
     local humanoidRootPart = char:FindFirstChild("HumanoidRootPart")
     if not humanoidRootPart then return false end
-    
     local shopFolder = workspace:FindFirstChild("Ignored") and workspace.Ignored:FindFirstChild("Shop")
     if not shopFolder then return false end
-    
     local maskShop = nil
     for _, item in pairs(shopFolder:GetChildren()) do
         if item.Name:lower():find("mask") or item.Name:lower():find("skull") then
-            maskShop = item
-            break
+            maskShop = item; break
         end
     end
-    
     if not maskShop then return false end
-    
     local headPart = maskShop:FindFirstChild("Head") or maskShop:FindFirstChildOfClass("BasePart")
     if not headPart then return false end
-    
     local cd = maskShop:FindFirstChild("ClickDetector")
     if not cd then
         for _, v in pairs(maskShop:GetDescendants()) do
-            if v:IsA("ClickDetector") then
-                cd = v
-                break
-            end
+            if v:IsA("ClickDetector") then cd = v; break end
         end
     end
-    
     if not cd then return false end
-    
     local origCF = humanoidRootPart.CFrame
     local attempts = 0
-    
     while not hasMask() and attempts < 25 do
         char = Player.Character
         if not char then break end
-        
         humanoidRootPart = char:FindFirstChild("HumanoidRootPart")
         if not humanoidRootPart then break end
-        
         local hum = char:FindFirstChildOfClass("Humanoid")
         if not hum or hum.Health <= 0 then break end
-        
         humanoidRootPart.CFrame = CFrame.new(headPart.Position + Vector3.new(0, -8, 0))
         task.wait(0.1)
-        
         fireclickdetector(cd)
         task.wait(0.4)
-        
         attempts = attempts + 1
     end
-    
     char = Player.Character
     humanoidRootPart = char and char:FindFirstChild("HumanoidRootPart")
-    if humanoidRootPart and origCF then
-        humanoidRootPart.CFrame = origCF
-    end
-    
+    if humanoidRootPart and origCF then humanoidRootPart.CFrame = origCF end
     return hasMask()
 end
 
 function equipMask()
     local char = Player.Character
     if not char then return false end
-    
     local backpack = Player:FindFirstChild("Backpack")
     if not backpack then return false end
-    
     local mask = backpack:FindFirstChild("[Mask]") or backpack:FindFirstChild("Mask")
     if not mask then return false end
-    
     mask.Parent = char
     task.wait(0.3)
-    
-    pcall(function()
-        mask:Activate()
-    end)
+    pcall(function() mask:Activate() end)
     task.wait(0.3)
-    
     return true
 end
-
--- ✅ NÃO AUTO-ATIVA MASK - SÓ COM COMANDO !mask on
--- REMOVIDO: task.spawn(function() task.wait(2); automaskenabled = true end)
 
 local Character = player.Character or player.CharacterAdded:Wait()
 local hrp = Character:WaitForChild("HumanoidRootPart")
@@ -429,6 +383,7 @@ function handleLoopKillCommand(targetName, specificBot)
             reloadTool()
             lockedTarget = nil; stomponly = false; bringonly = false; takeonly = false
             getgenv().downonly = false; opkill = false; voiding = false; summonTarget = nil; flingonly = false
+            waitingFF = false
             for _, targetPlayer in ipairs(Players:GetPlayers()) do
                 if targetPlayer.Name:lower():find(targetName,1,true) or targetPlayer.DisplayName:lower():find(targetName,1,true) then
                     lockedTarget = targetPlayer; return
@@ -449,6 +404,7 @@ function handleStompCommand(targetName, specificBot)
             reloadTool()
             lockedTarget = nil; stomponly = true; bringonly = false; takeonly = false
             getgenv().downonly = false; opkill = false; voiding = false; summonTarget = nil; flingonly = false
+            waitingFF = false
             for _, targetPlayer in ipairs(Players:GetPlayers()) do
                 if targetPlayer.Name:lower():find(targetName,1,true) or targetPlayer.DisplayName:lower():find(targetName,1,true) then
                     lockedTarget = targetPlayer; return
@@ -469,6 +425,7 @@ function handleOPKillCommand(targetName, specificBot)
             reloadTool()
             lockedTarget = nil; stomponly = false; bringonly = false; takeonly = false
             getgenv().downonly = false; opkill = true; voiding = false; summonTarget = nil; flingonly = false
+            waitingFF = false
             for _, targetPlayer in ipairs(Players:GetPlayers()) do
                 if targetPlayer.Name:lower():find(targetName,1,true) or targetPlayer.DisplayName:lower():find(targetName,1,true) then
                     lockedTarget = targetPlayer; return
@@ -487,6 +444,7 @@ function handleFlingCommand(targetName)
             reloadTool()
             lockedTarget = nil; stomponly = false; bringonly = false; takeonly = false
             getgenv().downonly = false; opkill = false; voiding = false; summonTarget = nil; flingonly = true
+            waitingFF = false
             for _, targetPlayer in ipairs(Players:GetPlayers()) do
                 if targetPlayer.Name:lower():find(targetName,1,true) or targetPlayer.DisplayName:lower():find(targetName,1,true) then
                     lockedTarget = targetPlayer; return
@@ -508,6 +466,7 @@ function handleBringCommand(targetName, specificBot, senderName)
             reloadTool()
             lockedTarget = nil; stomponly = false; bringonly = true; takeonly = false
             getgenv().downonly = false; opkill = false; voiding = false; summonTarget = nil; flingonly = false
+            waitingFF = false
             for _, targetPlayer in ipairs(Players:GetPlayers()) do
                 if targetPlayer.Name:lower():find(targetName,1,true) or targetPlayer.DisplayName:lower():find(targetName,1,true) then
                     lockedTarget = targetPlayer; return
@@ -536,6 +495,7 @@ function handleTakeCommand(targetName, destinationName)
         reloadTool()
         stomponly = false; bringonly = false; getgenv().downonly = false; opkill = false
         voiding = false; takeonly = true; summonTarget = nil; flingonly = false
+        waitingFF = false
     end
 end
 
@@ -562,6 +522,7 @@ function handleGotoCommand(playerName, locationName)
     reloadTool()
     stomponly = false; bringonly = false; getgenv().downonly = false; opkill = false
     voiding = false; takeonly = true; summonTarget = nil; flingonly = false
+    waitingFF = false
 end
 
 local skyTarget = nil
@@ -573,6 +534,7 @@ function handleSkyCommand(username)
     reloadTool()
     stomponly = false; bringonly = false; getgenv().downonly = false; opkill = false
     voiding = false; takeonly = true; summonTarget = nil; flingonly = false
+    waitingFF = false
 end
 
 function handleDownCommand(targetName, specificBot)
@@ -586,6 +548,7 @@ function handleDownCommand(targetName, specificBot)
             reloadTool()
             lockedTarget = nil; stomponly = false; bringonly = false; takeonly = false
             getgenv().downonly = true; opkill = false; voiding = false; summonTarget = nil; flingonly = false
+            waitingFF = false
             for _, targetPlayer in ipairs(Players:GetPlayers()) do
                 if targetPlayer.Name:lower():find(targetName,1,true) or targetPlayer.DisplayName:lower():find(targetName,1,true) then
                     lockedTarget = targetPlayer; return
@@ -606,6 +569,7 @@ function handleFixCommand(specificBot)
             ragebottargets = {}; lockedTarget = nil; autodrop = false
             buyingInProgress = false; buyingGunInProgress = false; buyingMaskInProgress = false
             voiding = true; summonTarget = nil; flingonly = false; killall = false
+            waitingFF = false
             game.Players.LocalPlayer.Character.Humanoid.Health = 0
         end
     end
@@ -672,6 +636,7 @@ end)
 function handleTeleportCommand(targetName, specificBot)
     getgenv().enabled = false; ragebottargets = {}; lockedTarget = nil
     voiding = true; summonTarget = Players:FindFirstChild(targetName)
+    waitingFF = false
 end
 
 function handleHideCommand(specificBot)
@@ -683,6 +648,7 @@ function handleHideCommand(specificBot)
             if specificBot and not botKey:lower():find(specificBot, 1, true) then return end
             getgenv().enabled = false; ragebottargets = {}; lockedTarget = nil
             voiding = true; summonTarget = nil; reloadTool()
+            waitingFF = false
         end
     end
 end
@@ -895,7 +861,6 @@ function setupChatListener(player)
             elseif msgLower == "!cashdrop off" then autodrop = false
             elseif msgLower == "!abuse on" then AbuseProtection = true
             elseif msgLower == "!abuse off" then AbuseProtection = false
-            -- ✅ COMANDO DE MASK - SÓ COMPRA QUANDO VOCÊ DIGITA !mask on
             elseif msgLower == "!mask on" then
                 automaskenabled = true
                 print("[KraviX] 🎭 Mask ativada! Comprando...")
@@ -948,7 +913,7 @@ function setupChatListener(player)
                 for name in namesString:gmatch("[^%s]+") do table.insert(names, name:lower()) end
                 reloadTool(); lockedTarget = nil; stomponly = false; bringonly = false
                 takeonly = false; getgenv().downonly = false; opkill = false; voiding = false
-                ragebottargets = {}; summonTarget = nil; shouldSwitch = true
+                ragebottargets = {}; summonTarget = nil; shouldSwitch = true; waitingFF = false
                 for _, inputName in ipairs(names) do
                     for _, t in ipairs(Players:GetPlayers()) do
                         if t.Name:lower():find(inputName,1,true) or t.DisplayName:lower():find(inputName,1,true) then
@@ -1130,7 +1095,7 @@ task.spawn(function()
             end
             if not lockedTarget:IsDescendantOf(game) then
                 lockedTargetUserId = lockedTarget.UserId
-                lockedTarget = nil; autoLocked = false; voiding = true
+                lockedTarget = nil; autoLocked = false; voiding = true; waitingFF = false
             end
         end
         task.wait()
@@ -1158,8 +1123,79 @@ task.spawn(function()
     end
 end)
 
--- ✅ REMOVIDAS: buyAndEquipMaskNew() e autoEquipMaskNew() - Não são usadas
--- A compra de mask agora é feita apenas por buyMaskLikeGun() quando automaskenabled = true
+-- ══════════════════════════════════════════════════════════════════════════
+-- LOOP DE MONITORAMENTO DE FF — igual ao ragebot
+-- Fica no void enquanto o alvo tem ForceField, retoma quando o FF sumir.
+-- Roda em paralelo, separado do Heartbeat para não disparar múltiplos loops.
+-- ══════════════════════════════════════════════════════════════════════════
+task.spawn(function()
+    while true do
+        task.wait(0.3)
+
+        -- reseta flag se não tem alvo
+        if not lockedTarget then
+            waitingFF = false
+            continue
+        end
+
+        -- só monitora no modo de kill principal (não stomp, bring, take, etc.)
+        if stomponly or bringonly or takeonly or getgenv().downonly or opkill or flingonly then
+            waitingFF = false
+            continue
+        end
+
+        local tChar = lockedTarget.Character
+        if not tChar then
+            waitingFF = false
+            continue
+        end
+
+        local ff = tChar:FindFirstChildOfClass("ForceField")
+
+        if ff and not waitingFF then
+            -- FF detectado — entra em modo de espera
+            waitingFF = true
+            teleporting = false
+            voiding = true
+            reloadTool()
+
+            -- loop interno: espera o FF sumir
+            local elapsed = 0
+            local maxWait = 30 -- segundos máximos esperando (evita loop eterno)
+            while elapsed < maxWait do
+                task.wait(0.3)
+                elapsed = elapsed + 0.3
+
+                -- se alvo mudou ou sumiu enquanto esperava, cancela
+                if not lockedTarget then waitingFF = false; break end
+                local tChar2 = lockedTarget.Character
+                if not tChar2 then waitingFF = false; break end
+
+                local ff2 = tChar2:FindFirstChildOfClass("ForceField")
+                if not ff2 then
+                    -- FF acabou! Retoma ataque
+                    waitingFF = false
+                    voiding = false
+                    teleporting = true
+                    break
+                end
+            end
+
+            -- se esgotou o tempo e FF ainda existe, troca de alvo
+            if waitingFF then
+                waitingFF = false
+                lockedTarget = nil
+                voiding = true
+            end
+
+        elseif not ff and waitingFF then
+            -- FF sumiu (detectado pelo loop principal acima, mas por segurança)
+            waitingFF = false
+            voiding = false
+            teleporting = true
+        end
+    end
+end)
 
 canrun   = true
 char     = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -1189,6 +1225,7 @@ task.spawn(function()
                 end
                 if (isSDeath or isNil) and not isReloading and canrun then
                     teleporting = false; voiding = true; reloadTool(); shouldSwitch = true
+                    waitingFF = false
                     if not didRefreshOnDeath and fpactive then
                         didRefreshOnDeath = true
                         task.delay(0.2, function()
@@ -1211,10 +1248,12 @@ task.spawn(function()
                         end
                     end
                 elseif not isKO and not isSDeath and not hasForceField and not isGrabbed and not isNil and not isReloading and canrun and not refreshingfakeposition then
+                    -- sem FF: ataca normalmente
                     teleporting = true; voiding = false; didRefreshOnDeath = false
                 elseif isReloading and not refreshingfakeposition then
                     teleporting = false; voiding = true
                 elseif hasForceField and not isReloading and not refreshingfakeposition then
+                    -- FF ativo: fica no void, loop de monitoramento cuida do resto
                     teleporting = false; voiding = true; reloadTool()
                 end
             end
@@ -1445,7 +1484,9 @@ RunService.Heartbeat:Connect(function()
     local isKO        = bodyEffects and bodyEffects:FindFirstChild("K.O") and bodyEffects["K.O"].Value
     local isGrabbed   = targetCharacter:FindFirstChild("GRABBING_CONSTRAINT")
     local hrp_        = targetCharacter:FindFirstChild("HumanoidRootPart")
-    if isKO or isGrabbed or not hrp_ or not targetPart then return end
+    -- não atira se tem FF (o loop de monitoramento resolve quando sumir)
+    local hasFF       = targetCharacter:FindFirstChildOfClass("ForceField")
+    if isKO or isGrabbed or not hrp_ or not targetPart or hasFF then return end
     if flingonly and target then return end
     local playerChar = game.Players.LocalPlayer.Character
     for _, tool in ipairs(playerChar:GetChildren()) do
@@ -1526,21 +1567,15 @@ end
 function hasGun(toolName)
     local Character_ = Player.Character
     local Backpack    = Player:FindFirstChild("Backpack")
-    
     if toolName == "[Mask]" then
         if Backpack then
-            if Backpack:FindFirstChild("[Mask]") or Backpack:FindFirstChild("Mask") then
-                return true
-            end
+            if Backpack:FindFirstChild("[Mask]") or Backpack:FindFirstChild("Mask") then return true end
         end
         if Character_ then
-            if Character_:FindFirstChild("[Mask]") or Character_:FindFirstChild("Mask") or Character_:FindFirstChild("In-gameMask") then
-                return true
-            end
+            if Character_:FindFirstChild("[Mask]") or Character_:FindFirstChild("Mask") or Character_:FindFirstChild("In-gameMask") then return true end
         end
         return false
     end
-    
     if Backpack then
         for _, item in ipairs(Backpack:GetChildren()) do
             if item:IsA("Tool") and item.Name == toolName then return true end
@@ -1553,8 +1588,6 @@ function hasGun(toolName)
     end
     return false
 end
-
--- ✅ REMOVIDA: getNextItemToBuy() - Não é usada, compra é feita direto pela task principal
 
 local fired = false
 game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function() fired = false end)
@@ -1590,132 +1623,73 @@ if executor and executor:lower():find("xeno") then
     end
 end
 
--- ═══════════════════════════════════════════════════════════════════════════
--- TASK PRINCIPAL DE COMPRA: APENAS QUANDO automaskenabled = true (!mask on)
--- ═══════════════════════════════════════════════════════════════════════════
-
 task.spawn(function()
     while true do
         local char = Player.Character
         local bp = Player:FindFirstChild("Backpack")
-        
-        if not char or not bp then
-            task.wait(1)
-            continue
-        end
-        
+        if not char or not bp then task.wait(1); continue end
         local hum = char:FindFirstChildOfClass("Humanoid")
-        if not hum or hum.Health <= 0 then
-            task.wait(1)
-            continue
-        end
-        
+        if not hum or hum.Health <= 0 then task.wait(1); continue end
         local be = char:FindFirstChild("BodyEffects")
         local isKO = be and be:FindFirstChild("K.O") and be["K.O"].Value
-        if isKO then
-            task.wait(1)
-            continue
-        end
-        
-        if buyingInProgress or buyingGunInProgress or buyingMaskInProgress then
-            task.wait(0.5)
-            continue
-        end
-        
+        if isKO then task.wait(1); continue end
+        if buyingInProgress or buyingGunInProgress or buyingMaskInProgress then task.wait(0.5); continue end
         local shopFolder = workspace:FindFirstChild("Ignored") and workspace.Ignored:FindFirstChild("Shop")
-        if not shopFolder then
-            task.wait(1)
-            continue
-        end
-        
-        -- ═══════════════════════════════════════════════════════════════════
-        -- PRIMEIRA PRIORIDADE: MASK (SÓ SE automaskenabled = true)
-        -- ═══════════════════════════════════════════════════════════════════
+        if not shopFolder then task.wait(1); continue end
+
         if automaskenabled and not hasMask() then
             buyingMaskInProgress = true
-            
             print("[KraviX] 🎭 Comprando MASK...")
             local maskBought = buyMaskLikeGun()
-            
             if maskBought then
                 print("[KraviX] ✅ MASK comprada! Equipando...")
-                equipMask()
-                task.wait(0.5)
-                
+                equipMask(); task.wait(0.5)
                 print("[KraviX] 🤐 Soltando MASK da mão...")
-                unequipMask()
-                task.wait(0.5)
+                unequipMask(); task.wait(0.5)
             end
-            
             buyingMaskInProgress = false
-            task.wait(2)
-            continue
+            task.wait(2); continue
         end
-        
-        -- ═══════════════════════════════════════════════════════════════════
-        -- SEGUNDA PRIORIDADE: ARMAS
-        -- ═══════════════════════════════════════════════════════════════════
+
         for _, gunKey in ipairs(Guns) do
             local gunInfo = gunData[gunKey]
             if not gunInfo then continue end
-            
             if gunKey == "mask" then continue end
-            
             if not hasGun(gunInfo.toolName) then
                 local shopItem = shopFolder:FindFirstChild(gunInfo.shopName)
                 if not shopItem then continue end
-                
                 local headPart = shopItem:FindFirstChild("Head")
-                if not headPart then
-                    headPart = shopItem:FindFirstChildOfClass("BasePart")
-                end
+                if not headPart then headPart = shopItem:FindFirstChildOfClass("BasePart") end
                 if not headPart then continue end
-                
                 local cd = shopItem:FindFirstChild("ClickDetector")
                 if not cd then
                     for _, v in pairs(shopItem:GetDescendants()) do
-                        if v:IsA("ClickDetector") then
-                            cd = v
-                            break
-                        end
+                        if v:IsA("ClickDetector") then cd = v; break end
                     end
                 end
                 if not cd then continue end
-                
                 buyingGunInProgress = true
                 local origCF = rootPart and rootPart.CFrame
                 local attempts = 0
-                
                 while not hasGun(gunInfo.toolName) and attempts < 25 do
                     char = Player.Character
                     rootPart = char and char:FindFirstChild("HumanoidRootPart")
                     if not rootPart then break end
-                    
                     local hum2 = char:FindFirstChildOfClass("Humanoid")
                     if not hum2 or hum2.Health <= 0 then break end
-                    
                     rootPart.CFrame = CFrame.new(headPart.Position + Vector3.new(0, 3, 0))
-                    task.wait(0.1)
-                    fireclickdetector(cd)
-                    task.wait(0.4)
+                    task.wait(0.1); fireclickdetector(cd); task.wait(0.4)
                     attempts = attempts + 1
                 end
-                
                 char = Player.Character
                 rootPart = char and char:FindFirstChild("HumanoidRootPart")
-                if rootPart and origCF then
-                    rootPart.CFrame = origCF
-                end
-                
+                if rootPart and origCF then rootPart.CFrame = origCF end
                 buyingGunInProgress = false
             end
         end
-        
         task.wait(2)
     end
 end)
-
-
 
 local humanoid = Character:FindFirstChild("Humanoid")
 local bodyEffects = Character and Character:FindFirstChild("BodyEffects")
@@ -1736,7 +1710,7 @@ task.spawn(function()
             local Backpack = localPlayer:FindFirstChild("Backpack")
             if Backpack then
                 for _, gunKey in ipairs(Guns) do
-                    if gunKey == "mask" then continue end  -- ✅ SKIP MASK - não equipa automaticamente
+                    if gunKey == "mask" then continue end
                     local gunName = gunData[gunKey].toolName
                     local gun = Backpack:FindFirstChild(gunName)
                     if gun and humanoid and humanoid.Health > 0 then
@@ -1850,8 +1824,7 @@ Player.CharacterAdded:Connect(function(newChar)
     humanoid   = Character:WaitForChild("Humanoid")
     bodyEffects= Character:WaitForChild("BodyEffects")
     koValue    = bodyEffects:WaitForChild("K.O")
-    
-    -- ✅ NÃO ATIVA MASK AUTOMATICAMENTE - AGUARDA COMANDO !mask on
+    waitingFF  = false  -- reseta ao respawnar
 end)
 
 for _, v in ipairs(Workspace:GetDescendants()) do
@@ -1957,5 +1930,4 @@ pcall(function()
     end)
 end)
 
--- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back kids haha
-print("[KraviX] ✅ Script carregado!")
+-- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back kid
