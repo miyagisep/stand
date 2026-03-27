@@ -64,6 +64,7 @@ local currentGunIndex = 1
 -- GUNDATA COM MASK
 -- ═══════════════════════════════════════════════════════════════════════════
 local gunData = {
+    mask = {toolName = "[Mask]", shopName = "Skull Mask", ammoShopName = "", inventoryKey = "[Mask]"},
     rifle = {toolName = "[Rifle]", shopName = "[Rifle] - $1745", ammoShopName = "5 [Rifle Ammo] - $281", inventoryKey = "[Rifle]"},
     shotgun = {toolName = "[Shotgun]", shopName = "[Shotgun] - $1407", ammoShopName = "20 [Shotgun Ammo] - $68", inventoryKey = "[Shotgun]"},
     smg = {toolName = "[SMG]", shopName = "[SMG] - $844", ammoShopName = "80 [SMG Ammo] - $68", inventoryKey = "[SMG]"},
@@ -1746,47 +1747,7 @@ task.spawn(function()
     end
 end)
 
-task.spawn(function()
-    while true do
-        local equippedGuns = getEquippedGuns()
-        for _, tool in ipairs(equippedGuns) do
-            local toolName  = tool.Name
-            local ammoCount = getAmmoCount(toolName)
-            if ammoCount and ammoCount <= 0 then
-                local ammoShopName = nil
-                for _, info in pairs(gunData) do
-                    if info.toolName == toolName then ammoShopName = info.ammoShopName; break end
-                end
-                if not ammoShopName then continue end
 
-                local ShopFolder = workspace:WaitForChild("Ignored"):WaitForChild("Shop")
-                local ammoItem   = ShopFolder:FindFirstChild(ammoShopName)
-                local char__     = Player.Character or Player.CharacterAdded:Wait()
-
-                if ammoItem and char__ and root and humanoid then
-                    local cd = ammoItem:FindFirstChild("ClickDetector")
-                    if not cd then continue end
-                    buyingInProgress = true
-                    local lastAmmo = getAmmoCount(toolName)
-                    local purchaseCount = 0
-                    while purchaseCount < 6 do
-                        if humanoid then humanoid:UnequipTools() end
-                        if root then root.CFrame = CFrame.new(ammoItem.Head.CFrame.Position + Vector3.new(0,-8,0)) end
-                        fireclickdetector(cd)
-                        if not humanoid or humanoid.Health <= 0 then break end
-                        task.wait()
-                        local newAmmo = getAmmoCount(toolName)
-                        if newAmmo and newAmmo > (lastAmmo or 0) then
-                            lastAmmo = newAmmo; purchaseCount += 1
-                        end
-                    end
-                    reloadTool(); buyingInProgress = false
-                end
-            end
-        end
-        task.wait()
-    end
-end)
 
 local humanoid = Character:FindFirstChild("Humanoid")
 local bodyEffects = Character and Character:FindFirstChild("BodyEffects")
@@ -2031,4 +1992,4 @@ pcall(function()
     end)
 end)
 
--- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back
+-- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: as
