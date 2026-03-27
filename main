@@ -1158,29 +1158,8 @@ task.spawn(function()
     end
 end)
 
-local function buyAndEquipMaskNew()
-    local Shop = game.Workspace:WaitForChild("Ignored"):WaitForChild("Shop")
-    local skullMask
-    for _,v in pairs(Shop:GetChildren()) do
-        if string.find(v.Name:lower(), "skull") then skullMask = v; break end
-    end
-    if skullMask then
-        rootPart.CFrame = skullMask.Head.CFrame + Vector3.new(0,3,0)
-        task.wait(0.4); fireclickdetector(skullMask.ClickDetector)
-        local attempts = 0
-        repeat task.wait(0.2); attempts = attempts + 1
-        until LocalPlayer.Backpack:FindFirstChild("Mask") or attempts > 25
-        local mask = LocalPlayer.Backpack:FindFirstChild("Mask")
-        if mask then mask.Parent = char; task.wait(0.3); mask:Activate(); task.wait(1) end
-    end
-end
-
-local function autoEquipMaskNew()
-    if LocalPlayer.Character then
-        local mask = LocalPlayer.Backpack:FindFirstChild("[Mask]")
-        if mask then mask.Parent = LocalPlayer.Character; task.wait(0.3); mask:Activate() end
-    end
-end
+-- ✅ REMOVIDAS: buyAndEquipMaskNew() e autoEquipMaskNew() - Não são usadas
+-- A compra de mask agora é feita apenas por buyMaskLikeGun() quando automaskenabled = true
 
 canrun   = true
 char     = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -1575,18 +1554,7 @@ function hasGun(toolName)
     return false
 end
 
-function getNextItemToBuy()
-    local char = Player.Character
-    if not char then return nil end
-    for _, gunKey in ipairs(Guns) do
-        local gunInfo = gunData[gunKey]
-        if gunInfo and not hasGun(gunInfo.toolName) then return "gun" end
-    end
-    if automaskenabled and not (char:FindFirstChild("Mask") or char:FindFirstChild("In-gameMask")) then
-        return "mask"
-    end
-    return nil
-end
+-- ✅ REMOVIDA: getNextItemToBuy() - Não é usada, compra é feita direto pela task principal
 
 local fired = false
 game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function() fired = false end)
@@ -1768,6 +1736,7 @@ task.spawn(function()
             local Backpack = localPlayer:FindFirstChild("Backpack")
             if Backpack then
                 for _, gunKey in ipairs(Guns) do
+                    if gunKey == "mask" then continue end  -- ✅ SKIP MASK - não equipa automaticamente
                     local gunName = gunData[gunKey].toolName
                     local gun = Backpack:FindFirstChild(gunName)
                     if gun and humanoid and humanoid.Health > 0 then
@@ -1882,11 +1851,7 @@ Player.CharacterAdded:Connect(function(newChar)
     bodyEffects= Character:WaitForChild("BodyEffects")
     koValue    = bodyEffects:WaitForChild("K.O")
     
-    -- ✅ NÃO AUTO-ATIVA MASK AO SPAWN - AGUARDA COMANDO !mask on
-    -- task.spawn(function()
-    --     task.wait(2) 
-    --     automaskenabled = true
-    -- end)
+    -- ✅ NÃO ATIVA MASK AUTOMATICAMENTE - AGUARDA COMANDO !mask on
 end)
 
 for _, v in ipairs(Workspace:GetDescendants()) do
@@ -1992,4 +1957,5 @@ pcall(function()
     end)
 end)
 
--- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: as
+-- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: Im back kids haha
+print("[KraviX] ✅ Script carregado!")
