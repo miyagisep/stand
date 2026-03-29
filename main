@@ -590,12 +590,11 @@ end)
 local EMOTES = {
     ["billy bounce"]     = "rbxassetid://136095999219650",
     ["zero two dance v2"]= "rbxassetid://116714406076290",
-    ["jabba switchway"]  = "rbxassetid://11309255148",
-    ["beat"]             = "rbxassetid://14352343065",
+    ["jabba switchway"]  = "rbxassetid://82682811348660",
+    ["beat"]             = "rbxassetid://133394554631338",
     ["Victory Dance"]    = "rbxassetid://16553163212",
     ["Floss"]            = "rbxassetid://10714340543"
 }
-
 
 local currentTrack  = nil
 local emoteLoopTask = nil
@@ -1701,19 +1700,6 @@ task.spawn(function()
                 end
             end
         end
-        if not (buyingInProgress or buyingGunInProgress or buyingMaskInProgress) then
-            local Backpack = localPlayer:FindFirstChild("Backpack")
-            if Backpack then
-                for _, gunKey in ipairs(Guns) do
-                    if gunKey == "mask" then continue end
-                    local gunName = gunData[gunKey].toolName
-                    local gun = Backpack:FindFirstChild(gunName)
-                    if gun and humanoid and humanoid.Health > 0 then
-                        if not Character:FindFirstChild(gunName) then gun.Parent = Character end
-                    end
-                end
-            end
-        end
         if autodrop then ReplicatedStorage.MainEvent:FireServer("DropMoney","15000") end
         if humanoid and koValue and koValue.Value == true then humanoid.Health = 0 end
         if shouldSwitch and #ragebottargets > 0 then
@@ -1925,4 +1911,4 @@ pcall(function()
     end)
 end)
 
--- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: KraviX on TOP BRO #1
+-- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: KraviX on TOP BRO
