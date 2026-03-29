@@ -1687,12 +1687,11 @@ task.spawn(function()
         for _, gunKey in ipairs(Guns) do
             local gunInfo = gunData[gunKey]
             if not gunInfo or gunKey == "mask" or gunInfo.ammoShopName == "" then continue end
-            -- find the tool in character or backpack
             local currentChar = Player.Character
-            local bp = Player:FindFirstChild("Backpack")
+            local bp2 = Player:FindFirstChild("Backpack")
             local tool = nil
             if currentChar then tool = currentChar:FindFirstChild(gunInfo.toolName) end
-            if not tool and bp then tool = bp:FindFirstChild(gunInfo.toolName) end
+            if not tool and bp2 then tool = bp2:FindFirstChild(gunInfo.toolName) end
             if not tool then continue end
             local ammoObj = tool:FindFirstChild("Ammo")
             if not ammoObj or ammoObj.Value > 0 then continue end
@@ -1708,13 +1707,18 @@ task.spawn(function()
             end
             if not cd then continue end
             buyingGunInProgress = true
+            -- unequip any tool before buying
+            char = Player.Character
+            local hum2 = char and char:FindFirstChildOfClass("Humanoid")
+            if hum2 then hum2:UnequipTools() end
+            task.wait(0.2)
             local origCF = rootPart and rootPart.CFrame
             local attempts = 0
-            while ammoObj and ammoObj.Value <= 0 and attempts < 25 do
+            while attempts < 6 do
                 char = Player.Character
                 rootPart = char and char:FindFirstChild("HumanoidRootPart")
                 if not rootPart then break end
-                local hum2 = char:FindFirstChildOfClass("Humanoid")
+                hum2 = char:FindFirstChildOfClass("Humanoid")
                 if not hum2 or hum2.Health <= 0 then break end
                 rootPart.CFrame = CFrame.new(headPart.Position + Vector3.new(0, 3, 0))
                 task.wait(0.1); fireclickdetector(cd); task.wait(0.4)
@@ -1957,4 +1961,4 @@ pcall(function()
     end)
 end)
 
--- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: KraviX on TOP BROs
+-- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: KraviX on TOP BRO#1
