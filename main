@@ -1633,12 +1633,12 @@ task.spawn(function()
 
         if automaskenabled and not hasMask() then
             buyingMaskInProgress = true
-            print("[KraviX] 🎭 Comprando MASK...")
+
             local maskBought = buyMaskLikeGun()
             if maskBought then
-                print("[KraviX] ✅ MASK comprada! Equipando...")
+
                 equipMask(); task.wait(0.5)
-                print("[KraviX] 🤐 Soltando MASK da mão...")
+
                 unequipMask(); task.wait(0.5)
             end
             buyingMaskInProgress = false
@@ -1693,8 +1693,9 @@ getgenv().lastHealths = {}
 
 task.spawn(function()
     while true do
-        if Character then
-            for _, tool in ipairs(Character:GetChildren()) do
+        local currentChar = Player.Character
+        if currentChar then
+            for _, tool in ipairs(currentChar:GetChildren()) do
                 if tool:IsA("Tool") and tool:FindFirstChild("Ammo") and tool.Ammo.Value <= 0 then
                     ReplicatedStorage.MainEvent:FireServer("Reload", tool)
                 end
