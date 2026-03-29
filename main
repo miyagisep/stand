@@ -1633,18 +1633,19 @@ task.spawn(function()
 
         if automaskenabled and not hasMask() then
             buyingMaskInProgress = true
-
+            print("[KraviX] 🎭 Comprando MASK...")
             local maskBought = buyMaskLikeGun()
             if maskBought then
-
+                print("[KraviX] ✅ MASK comprada! Equipando...")
                 equipMask(); task.wait(0.5)
-
+                print("[KraviX] 🤐 Soltando MASK da mão...")
                 unequipMask(); task.wait(0.5)
             end
             buyingMaskInProgress = false
             task.wait(2); continue
         end
 
+        -- buy gun if missing
         for _, gunKey in ipairs(Guns) do
             local gunInfo = gunData[gunKey]
             if not gunInfo then continue end
@@ -1681,6 +1682,62 @@ task.spawn(function()
                 buyingGunInProgress = false
             end
         end
+
+        -- buy ammo for equipped gun if low
+        local equippedTool = nil
+        local currentChar = Player.Character
+        if currentChar then
+            for _, t in ipairs(currentChar:GetChildren()) do
+                if t:IsA("Tool") and t:FindFirstChild("Ammo") then equippedTool = t; break end
+            end
+        end
+        if equippedTool then
+            local ammoVal = equippedTool.Ammo.Value
+            local needsAmmo = ammoVal <= 0
+            if needsAmmo then
+                local equippedGunInfo = nil
+                for _, info in pairs(gunData) do
+                    if info.toolName == equippedTool.Name and info.ammoShopName ~= "" then
+                        equippedGunInfo = info; break
+                    end
+                end
+                if equippedGunInfo then
+                    local ammoShopItem = shopFolder:FindFirstChild(equippedGunInfo.ammoShopName)
+                    if ammoShopItem then
+                        local headPart = ammoShopItem:FindFirstChild("Head") or ammoShopItem:FindFirstChildOfClass("BasePart")
+                        local cd = nil
+                        if headPart then
+                            cd = ammoShopItem:FindFirstChild("ClickDetector")
+                            if not cd then
+                                for _, v in pairs(ammoShopItem:GetDescendants()) do
+                                    if v:IsA("ClickDetector") then cd = v; break end
+                                end
+                            end
+                        end
+                        if cd and headPart then
+                            buyingGunInProgress = true
+                            local origCF = rootPart and rootPart.CFrame
+                            local attempts = 0
+                            while equippedTool and equippedTool.Ammo and equippedTool.Ammo.Value <= 0 and attempts < 25 do
+                                char = Player.Character
+                                rootPart = char and char:FindFirstChild("HumanoidRootPart")
+                                if not rootPart then break end
+                                local hum2 = char:FindFirstChildOfClass("Humanoid")
+                                if not hum2 or hum2.Health <= 0 then break end
+                                rootPart.CFrame = CFrame.new(headPart.Position + Vector3.new(0, 3, 0))
+                                task.wait(0.1); fireclickdetector(cd); task.wait(0.4)
+                                attempts = attempts + 1
+                            end
+                            char = Player.Character
+                            rootPart = char and char:FindFirstChild("HumanoidRootPart")
+                            if rootPart and origCF then rootPart.CFrame = origCF end
+                            buyingGunInProgress = false
+                        end
+                    end
+                end
+            end
+        end
+
         task.wait(2)
     end
 end)
@@ -1912,4 +1969,4 @@ pcall(function()
     end)
 end)
 
--- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: KraviX on TOP BRO
+-- By KraviX Team: Anni: fuck pussy, Makarov: RUSSIAN #1, Sixsdev: KraviX on TOP BROs
